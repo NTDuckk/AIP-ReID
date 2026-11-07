@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Person ReID Retrieval</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { width: 100%; }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+        .layout {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 320px;
+            background: #111827;
+            color: #f9fafb;
+            padding: 24px 20px;
+            border-right: 1px solid #1f2937;
+        }
+        .sidebar h1 {
+            font-size: 22px;
+            margin: 0 0 8px;
+        }
+        .sidebar p {
+            color: #cbd5e1;
+            margin: 0 0 24px;
+            line-height: 1.5;
+        }
+        .section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            display: block;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .radio-list {
+            display: grid;
+            gap: 10px;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .radio-item input[type="radio"], .radio-item input[type="checkbox"] {
+            transform: scale(1.1);
+        }
+        .number-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 15px;
+        }
+        .main {
+            flex: 1;
+            padding: 28px;
+        }
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            margin-bottom: 22px;
+        }
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 22px;
+        }
+        .top-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .button {
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .button.secondary {
+            background: #0f172a;
+        }
+        .button:hover {
+            opacity: 0.92;
+        }
+        .hidden-input {
+            display: none;
+        }
+        .preview-wrap {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+        .preview-box {
+            width: 220px;
+            height: 280px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+        }
+        .preview-empty {
+            color: #64748b;
+            padding: 18px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .token-box {
+            flex: 1;
+            min-width: 260px;
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+        }
+        .token-box h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+        .token-list {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 12px;
+            font-family: monospace;
+            color: #1e293b;
+        }
+        .token-list li {
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+        .meta-box {
+            flex: 1;
+            min-width: 260px;
+        }
+        .message {
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .message.info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 18px;
+        }
+        .result-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .result-card img {
+            width: 100%;
+            height: 260px;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+            background: #f8fafc;
+        }
+        .result-body {
+            padding: 14px;
+        }
+        .result-rank {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .result-text {
+            font-size: 14px;
+            color: #475569;
+            word-break: break-word;
+            line-height: 1.45;
+        }
+        .hint-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #475569;
+            line-height: 1.6;
+        }
+        @media (max-width: 960px) {
+            .layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+            }
+            .main {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <form class="layout" method="POST" action="/search" enctype="multipart/form-data">
+        <aside class="sidebar">
+            <h1>Settings</h1>
+
+            <div class="section">
+                <span class="section-title">Dataset</span>
+                <div class="radio-list">
+                    {% for dataset_key, dataset_cfg in dataset_options.items() %}
+                    <label class="radio-item">
+                        <input type="radio" name="dataset" value="{{ dataset_key }}" {% if selected_dataset==dataset_key %}checked{% endif %}>
+                        <span>{{ dataset_cfg.label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="section">
+                <span class="section-title">Khoảng cách</span>
+                <div class="radio-list">
+                    <label class="radio-item">
+                        <input type="radio" name="method" value="euclidean" {% if selected_method=='euclidean' %}checked{% endif %}>
+                        <span>Euclidean</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="method" value="cosine" {% if selected_method=='cosine' %}checked{% endif %}>
+                        <span>Cosine</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section">
+                <label class="section-title" for="topk">Số lượng ảnh lấy ra</label>
+                <input class="number-input" id="topk" name="topk" type="number" min="1" max="200" value="{{ selected_topk }}">
+            </div>
+
+            <div class="section">
+                <label class="radio-item">
+                    <input type="checkbox" name="show_tokens" value="true" {% if show_tokens %}checked{% endif %}>
+                    <span>Hiển thị token thuộc tính</span>
+                </label>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="card">
+                <h2>Ảnh truy vấn</h2>
+
+                {% if error %}
+                <div class="message error">{{ error }}</div>
+                {% endif %}
+
+                {% if info %}
+                <div class="message info">{{ info }}</div>
+                {% endif %}
+
+                <div class="top-actions">
+                    <label for="query_image" class="button secondary">Chọn ảnh</label>
+                    <input id="query_image" class="hidden-input" type="file" name="query_image" accept="image/*">
+                    <button type="submit" class="button">Tìm kiếm</button>
+                </div>
+
+                <div class="preview-wrap">
+                    <div class="preview-box">
+                        {% if query_image %}
+                        <img id="previewImage" src="/uploads/{{ query_image }}" alt="Query image">
+                        {% else %}
+                        <div id="previewPlaceholder" class="preview-empty">Chưa có ảnh được chọn</div>
+                        <img id="previewImage" src="" alt="Preview" style="display:none;">
+                        {% endif %}
+                    </div>
+
+                    {% if show_tokens and tokens %}
+                    <div class="token-box">
+                        <h3>Attribute Tokens</h3>
+                        <ul class="token-list">
+                            <li><strong>Person:</strong> {{ tokens.person | token_preview }}</li>
+                            <li><strong>Top:</strong> {{ tokens.top | token_preview }}</li>
+                            <li><strong>Underneath:</strong> {{ tokens.underneath | token_preview }}</li>
+                            <li><strong>Hairstyle:</strong> {{ tokens.hairstyle | token_preview }}</li>
+                            <li><strong>Shoes:</strong> {{ tokens.shoes | token_preview }}</li>
+                            <li><strong>Carrying:</strong> {{ tokens.carrying | token_preview }}</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Kết quả tìm kiếm</h2>
+
+                {% if results and results|length > 0 %}
+                <div class="results-grid">
+                    {% for item in results %}
+                    <div class="result-card">
+                        <div class="result-image-box">
+                            <img src="/gallery/{{ selected_dataset }}/{{ item.path }}" alt="Result {{ item.rank }}">
+                        </div>
+                        <div class="result-body">
+                            <div class="result-rank">Top {{ item.rank }}</div>
+                            <div class="result-text">
+                                <div><strong>{{ item.metric_name }}:</strong> {{ item.metric_value }}</div>
+                                <div><strong>ID:</strong> {{ item.person_id }}</div>
+                                <div><strong>Camera:</strong> {{ item.camera }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="preview-empty">Chưa có kết quả. Hãy chọn ảnh rồi bấm tìm kiếm.</div>
+                {% endif %}
+            </div>
+        </main>
+    </form>
+
+    <script>
+        const fileInput = document.getElementById('query_image');
+        const previewImage = document.getElementById('previewImage');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (event) {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    if (previewPlaceholder) {
+                        previewPlaceholder.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</body>
+
+</html>
